@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Absensi ES 5A</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#182230;--muted:#64748b;--line:#e5eaf2;--primary:#2457d6;--green:#138a55;--red:#c24141}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+.wrap{max-width:900px;margin:30px auto;padding:0 16px}.hero{background:#172b4d;color:#fff;padding:24px;border-radius:18px;margin-bottom:18px}
+.hero h1{margin:0 0 5px;font-size:25px}.hero p{margin:0;color:#d7e2f3}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 5px 20px #1c31500a}
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.field{flex:1;min-width:190px}.field label{display:block;font-weight:650;margin-bottom:6px}
+input[type=date],input[type=search],select{width:100%;padding:11px 12px;border:1px solid #ccd5e2;border-radius:10px;background:#fff;font:inherit;color:inherit}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:15px}.stat{padding:13px;border-radius:12px;background:#f3f6fb}.stat b{display:block;font-size:23px}.stat span{font-size:13px;color:var(--muted)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.btn{border:0;border-radius:10px;padding:10px 14px;font:600 14px system-ui;cursor:pointer;background:#e9eef8;color:#20304b}.btn.primary{background:var(--primary);color:#fff}.btn.dark{background:#172b4d;color:#fff}.btn:hover{filter:brightness(.96)}
+.student{display:grid;grid-template-columns:24px 1fr 115px;gap:10px;align-items:center;padding:10px 2px;border-bottom:1px solid var(--line)}.student:last-child{border-bottom:0}.student input{width:18px;height:18px;accent-color:var(--green)}.student label{cursor:pointer}.student select{padding:7px 8px;font-size:13px}.student.present .name{font-weight:600}
+h2{font-size:18px;margin:0 0 12px}.results{display:grid;grid-template-columns:1fr 1fr;gap:14px}.resultbox{border:1px solid var(--line);border-radius:12px;padding:14px;min-height:120px}.resultbox h3{font-size:15px;margin:0 0 8px}.resultbox ol{margin:0;padding-left:23px}.resultbox li{padding:2px 0}.green{color:var(--green)}.red{color:var(--red)}.muted{color:var(--muted);font-size:13px}
+.printinfo{display:none;margin:0 0 12px}
+@media(max-width:600px){.wrap{margin:16px auto}.hero{padding:20px}.summary{gap:7px}.stat{padding:10px}.stat b{font-size:20px}.results{grid-template-columns:1fr}.student{grid-template-columns:24px 1fr 100px}}
+@media print{body{background:#fff}.hero{background:#fff;color:#000;padding:0}.hero p{color:#333}.controls,.toolbar,.student-list,.muted.print-hide{display:none!important}.printinfo{display:block}.card{box-shadow:none;border:0;padding:0}.results{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <h1>Absensi Mahasiswa ES 5A</h1>
+  <p>Pilih mata kuliah, centang mahasiswa yang hadir. Daftar hadir dan tidak hadir dibuat otomatis.</p>
+</header>
+
+<section class="card">
+  <div class="controls">
+    <div class="field"><label for="matkul">Mata kuliah</label>
+      <select id="matkul">
+        <option value="">— Pilih mata kuliah —</option>
+        <option>Manajemen Perbankan Syariah</option>
+        <option>Sistem Informasi Manajemen</option>
+        <option>Operasional Perbankan Syariah</option>
+        <option>Metodologi Penelitian Kuantitatif</option>
+        <option>Akuntansi Bank Syariah</option>
+        <option>Kewirausahaan</option>
+        <option>Kajian Ekonomi Potensi Daerah</option>
+        <option>Hukum Bisnis</option>
+        <option>Praktikum Lembaga Keuangan Syariah</option>
+      </select>
+    </div>
+    <div class="field"><label for="tanggal">Tanggal perkuliahan</label><input id="tanggal" type="date"></div>
+    <div class="field"><label for="pertemuan">Keterangan (opsional)</label><input id="pertemuan" type="search" placeholder="Contoh: Pertemuan 8"></div>
+  </div>
+  <div class="summary">
+    <div class="stat"><b id="total">23</b><span>Total mahasiswa</span></div>
+    <div class="stat"><b id="hadirCount" class="green">0</b><span>Hadir</span></div>
+    <div class="stat"><b id="absenCount" class="red">23</b><span>Tidak hadir</span></div>
+  </div>
+  <p class="muted">Absensi tersimpan terpisah untuk setiap kombinasi mata kuliah dan tanggal.</p>
+</section>
+
+<section class="card student-list">
+  <h2>Daftar Mahasiswa</h2>
+  <input id="cari" type="search" placeholder="Cari nama mahasiswa..." aria-label="Cari nama mahasiswa">
+  <div class="toolbar">
+    <button class="btn" id="semuaHadir">Centang semua</button>
+    <button class="btn" id="hapusCentang">Hapus semua centang</button>
+    <button class="btn" id="reset">Reset data</button>
+  </div>
+  <div id="daftar"></div>
+  <p class="muted">Nama yang tidak dicentang otomatis masuk daftar tidak hadir. Pilih alasan jika diperlukan.</p>
+</section>
+
+<section class="card">
+  <h2>Hasil Absensi</h2>
+  <p class="printinfo" id="printInfo"></p>
+  <div class="results">
+    <div class="resultbox"><h3 class="green">A. Hadir (<span id="hasilHadir">0</span>)</h3><ol id="listHadir"></ol></div>
+    <div class="resultbox"><h3 class="red">B. Tidak Hadir (<span id="hasilAbsen">23</span>)</h3><ol id="listAbsen"></ol></div>
+  </div>
+  <div class="toolbar print-hide">
+    <button class="btn primary" id="salin">Salin hasil absensi</button>
+    <button class="btn dark" id="cetak">Cetak / Simpan PDF</button>
+  </div>
+  <p class="muted" id="status"></p>
+</section>
+</div>
+<script>
+const students = [
+"Abdullah Yusuf Sully","Ade Wahyu Andrianto","Aidil Dirgantara Ahmad","Astia",
+"Ati Tri Wigati","Devita Sari","Fendi Tomia","Fikram Mahu","Firda Hasnawati",
+"Meylisa Handayani","Milla Dian Melati","Muhammad Resa Syahban",
+"Muhammad Yusuf Al-Ghifari","Muhammad Yusuf Busra","Mutiara Wahid",
+"Nabila Habibatur Rahmah Pertiwi","Nadia Zahwa Azyzah","Nanda Yuda Putri Aisyah",
+"Nasywa Hafidzhah Ramadhani","Sandy Alfiansyah","Syakinah Azzahra",
+"Yuana Indah Sari","Zaskia Putri Ode"
+];
+const $ = id => document.getElementById(id);
+const key = "absensi_es5a_v2";
+let state = {};
+try { state = JSON.parse(localStorage.getItem(key) || "{}"); } catch(e) { state = {}; }
+state.records = state.records || {};
+const today = new Date(); today.setMinutes(today.getMinutes()-today.getTimezoneOffset());
+$("tanggal").value = state.date || today.toISOString().slice(0,10);
+$("pertemuan").value = state.note || "";
+$("matkul").value = state.course || "";
+
+function save(){
+  state.date=$("tanggal").value; state.note=$("pertemuan").value; state.course=$("matkul").value;
+  try { localStorage.setItem(key,JSON.stringify(state)); } catch(e) {}
+}
+function recKey(){ return ($("matkul").value||"-")+"|"+$("tanggal").value; }
+function rec(){ const k=recKey(); if(!state.records[k]) state.records[k]={}; return state.records[k]; }
+
+function renderStudents(){
+  const q=$("cari").value.toLowerCase();
+  const r=rec();
+  $("daftar").innerHTML="";
+  students.forEach((name,i)=>{
+    if(!name.toLowerCase().includes(q)) return;
+    const item=r[i] || {};
+    const row=document.createElement("div"); row.className="student"+(item.present?" present":"");
+    const check=document.createElement("input"); check.type="checkbox"; check.checked=!!item.present; check.id="s"+i;
+    check.addEventListener("change",()=>{const rr=rec();rr[i]={...rr[i],present:check.checked};save();render();});
+    const label=document.createElement("label"); label.htmlFor="s"+i; label.className="name"; label.textContent=name;
+    const select=document.createElement("select"); select.setAttribute("aria-label","Alasan tidak hadir: "+name);
+    [["","— Alasan —"],["I","Izin"],["S","Sakit"],["A","Alpa"]].forEach(([v,t])=>{const o=document.createElement("option");o.value=v;o.textContent=t;select.appendChild(o);});
+    select.value=item.reason||"";
+    select.disabled=!!item.present;
+    select.addEventListener("change",()=>{const rr=rec();rr[i]={...rr[i],reason:select.value};save();renderResults();});
+    row.append(check,label,select);$("daftar").appendChild(row);
+  });
+}
+function getLists(){
+  const r=rec();
+  const hadir=[],absen=[];
+  students.forEach((name,i)=>{const s=r[i]||{};if(s.present)hadir.push(name);else absen.push({name,reason:s.reason||""});});
+  return {hadir,absen};
+}
+function fmtDate(){
+  return $("tanggal").value ? new Date($("tanggal").value+"T00:00:00").toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"}) : "Tanggal belum diisi";
+}
+function renderResults(){
+  const {hadir,absen}=getLists();
+  $("total").textContent=students.length;$("hadirCount").textContent=hadir.length;$("absenCount").textContent=absen.length;
+  $("hasilHadir").textContent=hadir.length;$("hasilAbsen").textContent=absen.length;
+  $("listHadir").innerHTML=hadir.map(n=>`<li>${escapeHtml(n)}</li>`).join("");
+  $("listAbsen").innerHTML=absen.map(x=>`<li>${escapeHtml(x.name)}${x.reason?" ("+x.reason+")":""}</li>`).join("");
+  $("printInfo").innerHTML=`<b>Mata kuliah:</b> ${escapeHtml($("matkul").value||"-")}<br><b>Tanggal:</b> ${escapeHtml(fmtDate())}${$("pertemuan").value?"<br>"+escapeHtml($("pertemuan").value):""}`;
+}
+function render(){renderStudents();renderResults();}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function output(){
+ const {hadir,absen}=getLists();
+ const mk=$("matkul").value;
+ const tv=$("tanggal").value;
+ const dt=tv?new Date(tv+"T00:00:00"):null;
+ const hari=dt?dt.toLocaleDateString("id-ID",{weekday:"long"}):"";
+ const tgl=dt?dt.toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"}):"";
+ const alasan={I:"Izin",S:"Sakit",A:"Alpa"};
+ const tanggalStr=[hari,tgl].filter(Boolean).join(" ")+":";
+ const judul=["Absensi kehadiran mahasiswa kelas ES 5A,",mk,tanggalStr].filter(Boolean).join("\n");
+ let t=judul+"\n\n";
+ t+=hadir.map((n,i)=>`${i+1}. ${n}`).join("\n");
+ t+=`\n\nTidak hadir\n`;
+ t+=absen.map((x,i)=>`${i+1}. ${x.name}${x.reason?" ("+alasan[x.reason]+")":""}`).join("\n");
+ return t;
+}
+$("cari").addEventListener("input",renderStudents);
+$("matkul").addEventListener("change",()=>{save();render();});
+$("tanggal").addEventListener("change",()=>{save();render();});
+$("pertemuan").addEventListener("input",()=>{save();renderResults();});
+$("semuaHadir").onclick=()=>{const r=rec();students.forEach((_,i)=>r[i]={...(r[i]||{}),present:true});save();render();};
+$("hapusCentang").onclick=()=>{const r=rec();students.forEach((_,i)=>r[i]={...(r[i]||{}),present:false});save();render();};
+$("reset").onclick=()=>{if(confirm("Reset semua centang dan alasan untuk mata kuliah & tanggal ini?")){delete state.records[recKey()];save();render();}};
+$("salin").onclick=async()=>{try{await navigator.clipboard.writeText(output());$("status").textContent="Hasil absensi berhasil disalin.";}catch(e){$("status").textContent="Tidak bisa menyalin otomatis. Gunakan Cetak / Simpan PDF."; }};
+$("cetak").onclick=()=>window.print();
+render();
+</script>
+</body>
+</html>
